@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jolt.NzxtCam", "Jolt.NzxtCam\Jolt.NzxtCam.csproj", "{A07F670F-CEB7-4076-8D62-8D037F60E681}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A07F670F-CEB7-4076-8D62-8D037F60E681}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A07F670F-CEB7-4076-8D62-8D037F60E681}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A07F670F-CEB7-4076-8D62-8D037F60E681}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A07F670F-CEB7-4076-8D62-8D037F60E681}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4BD6540B-916E-49D6-9CFB-F076F4C77694}
+	EndGlobalSection
+EndGlobal
