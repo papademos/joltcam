@@ -199,19 +199,21 @@ public static class TriangleRenderer
         var yn = I(lowerLeft.Y);
         var dy = yn - y0;
         for (int y = y0; y < yn; y++) {
-            var ty = F(y - y0) / dy;
-            var left = Vector4.Lerp(upperLeft, lowerLeft, ty);
-            var right = Vector4.Lerp(upperRight, lowerRight, ty);
+            var t = F(y - y0) / dy;
+            var left = Vector4.Lerp(upperLeft, lowerLeft, t);
+            var right = Vector4.Lerp(upperRight, lowerRight, t);
             
             var x0 = I(left.X);
             var xn = I(right.X);
-            var dx = yn - y0;
+            var dx = xn - x0;
             for (var x = x0; x < xn; x++) {
-                var tx = F(x - x0) / dx;
-                var z = Lerp(left.W, right.W, tx);
+                t = F(x - x0) / dx;
+                var z = Lerp(left.Z, right.Z, t);
                 if (z < zbuffer[x, y]) {
-                    cbuffer[x, y] = color;
                     zbuffer[x, y] = z;
+                    //var c = (int)(255 * Saturate(z/500));
+                    //color = Color.FromArgb(255, c, c, c).ToArgb();
+                    cbuffer[x, y] = color;
                 }
             }
         }

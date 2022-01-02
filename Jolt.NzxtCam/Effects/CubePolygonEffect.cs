@@ -69,9 +69,6 @@ class CubePolygonEffect : EffectBase
             var m = objectMatrices[i] * viewMatrix * projectionMatrix;
             var p = models[i].Positions;
             Transform(p, m);
-            //for (var j = 0; j < p.Length; j++) {
-            //    p[j].W = 1 / p[j].Z;
-            //}
             TransformToScreen(p, znear, zfar, context.Size.Width, context.Size.Height);
         }
 
@@ -82,10 +79,8 @@ class CubePolygonEffect : EffectBase
         };
         for (int i = 0; i < models.Length; i++) {
             var model = models[i];
-            //var faces = model.Faces.Select(face => face.Select(index => V3(model.Positions[index])).ToArray()).ToArray();
             var faces = model.Faces.Select(face => face.Select(index => model.Positions[index]).ToArray()).ToArray();
             foreach (var f in faces) {
-                //var w = Vector3.Normalize(Vector3.Cross(f[1] - f[0], f[2] - f[1])).Z;
                 var z = Vector3.Normalize(Vector3.Cross(V3(f[1] - f[0]), V3(f[2] - f[1]))).Z;
                 if (z < 0) {
                     continue;
@@ -100,6 +95,7 @@ class CubePolygonEffect : EffectBase
             }
         }
 
+        //
         var bitmap = cbuffer.UpdateBitmap();
         var state = graphics.Save();
         graphics.PixelOffsetMode = PixelOffsetMode.None;
@@ -107,9 +103,5 @@ class CubePolygonEffect : EffectBase
         graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
         graphics.DrawImageUnscaled(bitmap, 0, 0);
         graphics.Restore(state);
-
-        //
-        //var lineManager = new LineManager();
-        //ModelRenderer.RenderFaceLines(context, lineManager, model with { Positions = positions });
     }
 }
