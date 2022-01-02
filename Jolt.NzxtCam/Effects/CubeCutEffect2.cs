@@ -27,18 +27,20 @@ class CubeCutEffect2 : EffectBase {
     };
 
     public override void Render(RenderContext context) {
+        //
+        var cbuffer = context.Cbuffer;
+        cbuffer?.Clear();
+
         // Update
-        var (g, _, t) = context;
-        t *= 0.1f;
+        var (graphics, _, t) = context;
+        t *= 0.4f;
         var mObj = new[] {
             RotZ(0.02f * t) *
             RotY(0.01f * t) *
             RotX(-0.3f * t),
-            //Matrix4x4.Identity,
             RotZ(0.005f * t) *
             RotY(0.25f * t) *
             RotX(0.015f * t),
-            //Matrix4x4.Identity,
         };
         var models = new[] {
             model with { Positions = new(model.Positions), Faces = new(model.Faces) },
@@ -92,31 +94,78 @@ class CubeCutEffect2 : EffectBase {
             viewMatrix *
             projectionMatrix;
         foreach (var model in models) {
-            Transform(model.Positions, viewProjectionMatrix);
+            Transform(model.Positions, viewMatrix);
+        }
+        foreach (var model in models) {
+            Transform(model.Positions, projectionMatrix);
             TransformToScreen(model.Positions, znear, zfar, context.Size.Width, context.Size.Height);
         }
 
         //
-        foreach (var model in models) {
-            model.Cull(Matrix4x4.Identity);
+        var baseColors = new[] {
+            Color.Orange,
+            Color.SlateBlue
+        };
+        var colors = baseColors.Select(_ => new List<Color>()).ToArray();
+        for (int i=0; i < models.Length; i++) {
+            var model = models[i];
+            var color = baseColors[i];
+            for (int j = model.Faces.Count - 1; j >= 0; j--) {
+                var normal = model.CalculateNormal(j);
+                var z = normal.Z;
+                if (normal.Z < 0) {
+                    model.Faces.RemoveAt(j);
+                    continue;
+                }
+                // TODO: t = 3.18393779 causes an exception because z is NaN.
+                var a = 255;
+                var r = (int)Abs(z * color.R);
+                var g = (int)Abs(z * color.G);
+                var b = (int)Abs(z * color.B);
+                var c = Color.FromArgb(a, r, g, b);
+                colors[i].Insert(0, c);
+            }
         }
 
         // Render
         using var pen = new Pen(Color.White, 2);
-        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        g.SmoothingMode = SmoothingMode.HighQuality;
-        foreach (var model in models) {
-            foreach (var face in model.Faces) {
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.SmoothingMode = SmoothingMode.HighQuality;
+        var polygons = new SortedDictionary<float, List<ColoredPolygon2>>();
+        for (int i=0; i < models.Length; i++) {
+            var model = models[i];
+            for (int j=0; j < model.Faces.Count; j++) {
+                var face = model.Faces[j];
+                var color = colors[i][j];
+                var z = -face
+                    .Average(index => model.Positions[index].Z);
                 var positions = face
                     .Select(index => model.Positions[index])
                     .Select(V2)
                     .ToList();
-                for (int i = 0; i < positions.Count; i++) {
-                    g.RenderLine(pen, positions[i], positions[(i + 1) % positions.Count]);
+                if (!polygons.TryGetValue(z, out var list)) {
+                    polygons[z] = list = new();
+                }
+                list.Add(new(new(positions), color));
+            }
+        }
+        foreach (var (z, list) in polygons) {
+            foreach (var (p, c) in list) {
+                for (int i = 0; i < p.Count; i++) {
+                    PolygonRenderer.Render(cbuffer, null, p, c.ToArgb());
                 }
             }
         }
+
+        //
+        var bitmap = cbuffer.UpdateBitmap();
+        var state = graphics.Save();
+        graphics.PixelOffsetMode = PixelOffsetMode.None;
+        graphics.SmoothingMode = SmoothingMode.None;
+        graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+        graphics.DrawImageUnscaled(bitmap, 0, 0);
+        graphics.Restore(state);
     }
 }
 
-record FaceLine(Vector3 From, Vector3 To, int ObjectId, Vector3 ViewNormal, Vector3 ProjNormal);
+record struct ColoredPolygon2(Polygon2 Polygon, Color color);
