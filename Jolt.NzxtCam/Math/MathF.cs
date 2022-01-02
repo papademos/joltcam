@@ -51,6 +51,7 @@ static class MathF
     public static Vector4 V(float x, float y, float z, float w) => new(x, y, z, w);
     public static Vector2 V2(Vector3 v3) => new(v3.X, v3.Y);
     public static Vector2 V2(Vector4 v4) => new(v4.X, v4.Y);
+    public static Vector3 V3(Vector2 v2) => new(v2.X, v2.Y, 0);
     public static Vector3 V3(Vector4 v4) => new(v4.X, v4.Y, v4.Z);
     public static Vector4 V4(Vector2 v2) => new(v2.X, v2.Y, 0, 0);
 

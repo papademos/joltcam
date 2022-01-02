@@ -19,8 +19,8 @@ internal static class Program
             //new CubeEffect(),
             //new TwisterEffect(),
             //new RotatingPlusEffect(),
-            //new CityEffect(),
-            new CubePolygonEffect(),
+            new CityEffect(),
+            //new CubePolygonEffect(),
             new BouncingTextEffect("JOLT"),
         });
 

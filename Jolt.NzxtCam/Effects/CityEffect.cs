@@ -7,17 +7,7 @@ using System.Diagnostics;
 
 namespace Jolt.NzxtCam;
 
-//class City
-//{
-//    public List<Block> Blocks { get; } = new();
-//}
-
-//record class Junction(Vector2 Position);
-
-//record class Road(Junction J0, Junction J1);
-
-record class Building(Vector2 Position, Vector3 Size, float Rotation) {
-}
+record class Building(Vector2 Position, Vector3 Size, float Rotation);
 
 class Block
 {
@@ -28,13 +18,8 @@ class Block
     }
 }
 
-//class Building
-//{
-//}
-
 class RadialCity
 {
-    //public List<Line2> Lines { get; } = new();
     public List<Block> Blocks { get; } = new();
     public RadialCity() {
         var positions = Enumerable
@@ -81,22 +66,86 @@ class CityEffect : EffectBase
     }
 
     public override void Render(RenderContext context) {
-        var g = context.Graphics;
-        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        g.SmoothingMode = SmoothingMode.HighQuality;
+        //
+        var (graphics, size, t) = context;
+        var (w, h) = (size.Width, size.Height);
+
+        //
+        var viewMatrix = CreateLookAt(
+            cameraPosition: V(0, -150, 0),
+            cameraTarget: V(0, 0, 0),
+            cameraUpVector: V(0, 0, -1));
+        var znear = 10f;
+        var zfar = 1001f;
+        var projectionMatrix = CreatePerspective(w, h, znear, zfar);
+
+        //
+        var models = new List<Model4>();
+        foreach (var block in city.Blocks) {
+            foreach (var building in block.Buildings) {
+                var sx = building.Size.X / 2;
+                var sy = building.Size.Y / 2;
+                var model = ModelFactory.CreateCuboid4(-sx, sx, -sy, sy, 0, 50, Color.Gray);
+                var m4 =
+                    CreateRotationZ(RevToRad(building.Rotation)) *
+                    CreateTranslation(V3(building.Position)) *
+                    viewMatrix *
+                    projectionMatrix;
+                Transform(model.Positions, m4);
+                TransformToScreen(model.Positions, znear, zfar, w, h);
+                models.Add(model);
+            }
+        }
+
+        //
+        var cbuffer = context.Cbuffer;
+        var zbuffer = context.Zbuffer;
+        cbuffer?.Clear();
+        zbuffer?.Fill(float.MaxValue);
+
+        //
+        for (int i = 0; i < models.Count; i++) {
+            var model = models[i];
+            var faces = model.Faces.Select(face => face.Select(index => model.Positions[index]).ToArray()).ToArray();
+            foreach (var f in faces) {
+                var q = Cross(Vector2.Normalize(V2(f[1] - f[0])), Vector2.Normalize(V2(f[2] - f[1])));
+                if (q < 0) {
+                    continue;
+                }
+                var color = model.Color;
+                var a = 255;
+                var r = (int)Abs(q * color.R);
+                var g = (int)Abs(q * color.G);
+                var b = (int)Abs(q * color.B);
+                var c = Color.FromArgb(a, r, g, b).ToArgb();
+                TriangleRenderer.Render(cbuffer, zbuffer, f[0], f[1], f[2], c);
+                TriangleRenderer.Render(cbuffer, zbuffer, f[2], f[3], f[0], c);
+            }
+        }
+
+        //
+        var bitmap = cbuffer.UpdateBitmap();
+        var state = graphics.Save();
+        graphics.PixelOffsetMode = PixelOffsetMode.None;
+        graphics.SmoothingMode = SmoothingMode.None;
+        graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+        graphics.DrawImageUnscaled(bitmap, 0, 0);
+        graphics.Restore(state);
+
+        //
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.SmoothingMode = SmoothingMode.HighQuality;
         using var pen = new Pen(Color.Orange, 2);
         using var pen1 = new Pen(Color.BlueViolet, 1.5f);
-        var w = 250;
-        var h = 250;
         var o = new Vector2(w / 2, h / 2);
-        var t = context.ElapsedSeconds;
         var m =
             Matrix3x2.CreateRotation(0.3f * t) *
             Matrix3x2.CreateScale(2 - Cos(0.2f*t)) *
             Matrix3x2.CreateTranslation(o);
 
+        //
         foreach (var block in city.Blocks) {
-            g.RenderPolyline(pen, block.Bounds.Transform(m));
+            graphics.RenderPolyline(pen, block.Bounds.Transform(m));
             foreach (var building in block.Buildings) {
                 var sx = building.Size.X / 2;
                 var sy = building.Size.Y / 2;
@@ -105,8 +154,34 @@ class CityEffect : EffectBase
                     Matrix3x2.CreateRotation(RevToRad(building.Rotation)) *
                     Matrix3x2.CreateTranslation(building.Position) *
                     m;
-                g.RenderPolyline(pen1, p.Transform(m2));
+                graphics.RenderPolyline(pen1, p.Transform(m2));
             }
-        }
+        }    
     }
+}
+
+internal static class ModelFactory {
+    public static Model4 CreateCuboid4(float w, float h, float d, Color color)
+        => CreateCuboid4(-w / 2, w / 2, -h / 2, h / 2, -d / 2, d / 2, color);
+
+    public static Model4 CreateCuboid4(float x0, float x1, float y0, float y1, float z0, float z1, Color color)
+        => new(new() {
+            V(x0, y0, z1, 1),
+            V(x1, y0, z1, 1),
+            V(x1, y1, z1, 1),
+            V(x0, y1, z1, 1),
+            V(x0, y0, z0, 1),
+            V(x1, y0, z0, 1),
+            V(x1, y1, z0, 1),
+            V(x0, y1, z0, 1),
+        },
+        new() {
+            new(0, 1, 2, 3), // front
+            new(1, 5, 6, 2), // right
+            new(5, 4, 7, 6), // back
+            new(4, 0, 3, 7), // left
+            new(4, 5, 1, 0), // top
+            new(3, 2, 6, 7), // bottom
+        },
+        color);
 }
