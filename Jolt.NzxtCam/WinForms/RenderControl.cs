@@ -16,7 +16,11 @@ class RenderControl : Control {
         var h = Height / viewModel.ScaleFactor;
         g.ScaleTransform(scale, scale);
         g.Clear(Color.Black);
-        var context = new RenderContext(g, new(w, h), viewModel.ElapsedSeconds);
+        var t = viewModel.ElapsedSeconds;
+        //var t = 8.721934f;
+        //var t = 13.9439611f;
+        //var t = 0.15f;
+        var context = new RenderContext(g, new(w, h), t);
         viewModel.Render(context);
     }
 
@@ -27,6 +31,15 @@ class RenderControl : Control {
             viewModel.ScaleFactor = Math.Min(16, viewModel.ScaleFactor * 2);
         }
         UpdateDimensions();
+    }
+
+    protected override void OnMouseDown(MouseEventArgs args) {
+        base.OnMouseDown(args);
+        if (viewModel.Watch.IsRunning) {
+            viewModel.Watch.Stop();
+        } else {
+            viewModel.Watch.Start();
+        }
     }
 
     private void UpdateDimensions() {

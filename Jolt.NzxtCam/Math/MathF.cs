@@ -49,9 +49,15 @@ static class MathF
     public static Vector2 V(float x, float y) => new Vector2(x, y);
     public static Vector3 V(float x, float y, float z) => new Vector3(x, y, z);
     public static Vector4 V(float x, float y, float z, float w) => new Vector4(x, y, z, w);
+    public static Vector3 V3(Vector4 v4) => new Vector3(v4.X, v4.Y, v4.Z);
 
     //
     public static void Transform(IList<Vector3> positions, Matrix4x4 m) {
+        for (int i = 0; i < positions.Count; i++) {
+            positions[i] = Transform(positions[i], m);
+        }
+    }
+    public static void Transform(IList<Vector4> positions, Matrix4x4 m) {
         for (int i = 0; i < positions.Count; i++) {
             positions[i] = Transform(positions[i], m);
         }
@@ -63,6 +69,15 @@ static class MathF
                 (zfar - znear) * p.X / p.Z + width / 2,
                 (zfar - znear) * p.Y / p.Z + height / 2,
                 p.Z);
+        }
+    }
+    public static void TransformToScreen(IList<Vector4> positions, float znear, float zfar, float width, float height) {
+        for (int i = 0; i < positions.Count; i++) {
+            var p = positions[i];
+            positions[i] = V(
+                (zfar - znear) * p.X / p.Z + width / 2,
+                (zfar - znear) * p.Y / p.Z + height / 2,
+                p.Z, p.W);
         }
     }
 }
