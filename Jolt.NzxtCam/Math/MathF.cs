@@ -50,6 +50,7 @@ static class MathF
     public static Vector3 V(float x, float y, float z) => new(x, y, z);
     public static Vector4 V(float x, float y, float z, float w) => new(x, y, z, w);
     public static Vector2 V2(Vector3 v3) => new(v3.X, v3.Y);
+    public static Vector2 V2(Vector4 v4) => new(v4.X, v4.Y);
     public static Vector3 V3(Vector4 v4) => new(v4.X, v4.Y, v4.Z);
     public static Vector4 V4(Vector2 v2) => new(v2.X, v2.Y, 0, 0);
 
@@ -73,13 +74,17 @@ static class MathF
                 p.Z);
         }
     }
+    
+    // https://gamedev.stackexchange.com/questions/103693/why-do-we-need-a-fourth-coordinate-to-divide-by-z
     public static void TransformToScreen(IList<Vector4> positions, float znear, float zfar, float width, float height) {
         for (int i = 0; i < positions.Count; i++) {
             var p = positions[i];
             positions[i] = V(
-                (zfar - znear) * p.X / p.Z + width / 2,
-                (zfar - znear) * p.Y / p.Z + height / 2,
-                p.Z, p.W);
+                (zfar - znear) * p.X / p.W + width / 2,
+                (zfar - znear) * p.Y / p.W + height / 2,
+                //p.Z, p.W);
+                p.Z / p.W, 
+                p.W);
         }
     }
 }

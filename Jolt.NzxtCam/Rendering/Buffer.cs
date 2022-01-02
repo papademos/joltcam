@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Drawing.Imaging;
+using System.Numerics;
 using System.Runtime.InteropServices;
 namespace Jolt.NzxtCam;
 
@@ -94,6 +95,11 @@ public unsafe class Buffer<T> : IDisposable where T : struct {
 
 public unsafe class ZBuffer : Buffer<float> {
     public ZBuffer(Size size) : base(size) { 
+    }
+}
+
+public unsafe class NBuffer : Buffer<Vector2> {
+    public NBuffer(Size size) : base(size) { 
     }
 }
 

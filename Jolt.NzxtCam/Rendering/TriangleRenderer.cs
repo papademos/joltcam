@@ -2,26 +2,6 @@
 using static Jolt.NzxtCam.MathF;
 namespace Jolt.NzxtCam;
 
-public static class PolygonRenderer
-{
-    public static void Render(CBuffer cbuffer, ZBuffer? zbuffer, Polygon2 polygon, int color) {
-        var f = polygon;
-        var c = f.Count;
-        if (c == 3) {
-            TriangleRenderer.Render(cbuffer, null, f[0], f[1], f[2], color);
-            return;
-        }
-        var center = Vector2.Zero;
-        foreach (var p in f) {
-            center += p;
-        }
-        center /= c;
-        for (int i = 0; i < c; i++) {
-            TriangleRenderer.Render(cbuffer, null, f[i], f[(i + 1) % c], center, color);
-        }
-    }
-}
-
 public static class TriangleRenderer
 {
     public static void Render(CBuffer cbuffer, ZBuffer? zbuffer, Vector2 p0, Vector2 p1, Vector2 p2, int color) {
@@ -116,8 +96,6 @@ public static class TriangleRenderer
                 var z = Lerp(left.Z, right.Z, t);
                 if (z < zbuffer[x, y]) {
                     zbuffer[x, y] = z;
-                    //var c = (int)(255 * Saturate(z/500));
-                    //color = Color.FromArgb(255, c, c, c).ToArgb();
                     cbuffer[x, y] = color;
                 }
             }

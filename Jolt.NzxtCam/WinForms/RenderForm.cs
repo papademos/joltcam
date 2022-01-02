@@ -22,7 +22,7 @@ class RenderForm : Form {
         switch (args.KeyCode) {
             case Keys.G:
                 // TODO: This should probably be handled elsewhere.
-                viewModel.RenderGif("effect.gif", viewModel.Size, 0, 10, 600);
+                viewModel.RenderGif($"effect.{Guid.NewGuid()}.gif", viewModel.Size, 0, 10, 600);
                 break;
         }
     }

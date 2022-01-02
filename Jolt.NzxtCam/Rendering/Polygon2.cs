@@ -4,6 +4,31 @@ using System.Collections;
 
 namespace Jolt.NzxtCam;
 
+public record struct Triangle4(Vector4 P0, Vector4 P1, Vector4 P2)
+{
+    public bool Contains(Vector2 p) {
+        var (v0, v1, v2) = (V2(P0) - p, V2(P1) - p, V2(P2) - p);
+        var w0 = Cross(v0, v1);
+        var w1 = Cross(v1, v2);
+        var w2 = Cross(v2, v0);
+        var sameOrientation =
+            w0 < 0 && w1 < 0 && w2 < 0 ||
+            w0 > 0 && w1 > 0 && w2 > 0;
+        return sameOrientation;
+    }
+
+    public float MinX => Min(P0.X, Min(P1.X, P2.X));
+    public float MaxX => Max(P0.X, Max(P1.X, P2.X));
+    public float MinY => Min(P0.Y, Min(P1.Y, P2.Y));
+    public float MaxY => Max(P0.Y, Max(P1.Y, P2.Y));
+    public int MinIX => (int)(MinX + 0.5f);
+    public int MaxIX => (int)(MaxX + 0.5f);
+    public int MinIY => (int)(MinY + 0.5f);
+    public int MaxIY => (int)(MaxY + 0.5f);
+    public RectangleF Bounds => RectangleF.FromLTRB(MinX, MinY, MaxX, MaxY);
+    public Rectangle BoundsI => Rectangle.FromLTRB(MinIX, MinIY, MaxIX, MaxIY);
+}
+
 public class Polygon2 : IList<Vector2>
 {
     //

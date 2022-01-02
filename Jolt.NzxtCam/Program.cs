@@ -15,12 +15,12 @@ internal static class Program
         var viewModel = new RenderViewModel();
         viewModel.Effects.AddRange(new IEffect[] {
             //new CubeCutEffect(),
-            new CubeCutEffect2(),
+            //new CubeCutEffect2(),
             //new CubeEffect(),
             //new TwisterEffect(),
             //new RotatingPlusEffect(),
             //new CityEffect(),
-            //new CubePolygonEffect(),
+            new CubePolygonEffect(),
             new BouncingTextEffect("JOLT"),
         });
 
