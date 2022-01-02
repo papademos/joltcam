@@ -6,7 +6,7 @@ namespace Jolt.NzxtCam;
 class CubeEffect : EffectBase
 {
     private readonly Model model = default(Model) with {
-        Positions = new Vector3[] {
+        Positions = new() {
             V(-50, -50, - -50),
             V( 50, -50, - -50),
             V( 50,  50, - -50),
@@ -16,7 +16,7 @@ class CubeEffect : EffectBase
             V( 50,  50, -  50),
             V(-50,  50, -  50),
         },
-        Faces = new Face[] {
+        Faces = new() {
             new(0, 1, 2, 3), // front
             new(1, 5, 6, 2), // right
             new(5, 4, 7, 6), // back
@@ -43,7 +43,7 @@ class CubeEffect : EffectBase
         var projectionMatrix = CreatePerspective(250, 250, znear, zfar);
         m *= viewMatrix;
         m *= projectionMatrix;
-        var positions = model.Positions.ToArray();
+        var positions = model.Positions.ToList();
         Transform(positions, m);
         TransformToScreen(positions, znear, zfar, context.Size.Width, context.Size.Height);
 

@@ -4,7 +4,7 @@ namespace Jolt.NzxtCam;
 
 internal static class FaceHelper
 {
-    public static (List<Face> Neg, List<Face> Pos) Split(List<Vector3> p, List<Face> faces, Plane plane) {
+    public static (List<Face> Neg, List<Face> Pos) Split(List<Vector3> p, IReadOnlyList<Face> faces, Plane plane) {
         var posFaces = new List<Face>();
         var negFaces = new List<Face>();
         var pos = new List<int>(8);
@@ -145,9 +145,9 @@ internal static class FaceHelper
 
         var from = Vector3.Dot(plane.Normal, ray.Position);
         var distance = (-plane.D - from) / direction;
-        if (distance.IsZero()) {
-            distance = 0;
-        }
+        //if (distance.IsZero()) {
+        //    distance = 0;
+        //}
         return distance;
     }
 

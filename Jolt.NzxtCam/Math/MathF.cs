@@ -46,10 +46,11 @@ static class MathF
     public static bool IsEqual(this Vector3 a, Vector3 b, float epsilon = Epsilon) => Vector3.Distance(a, b) <= epsilon;
 
     //
-    public static Vector2 V(float x, float y) => new Vector2(x, y);
-    public static Vector3 V(float x, float y, float z) => new Vector3(x, y, z);
-    public static Vector4 V(float x, float y, float z, float w) => new Vector4(x, y, z, w);
-    public static Vector3 V3(Vector4 v4) => new Vector3(v4.X, v4.Y, v4.Z);
+    public static Vector2 V(float x, float y) => new(x, y);
+    public static Vector3 V(float x, float y, float z) => new(x, y, z);
+    public static Vector4 V(float x, float y, float z, float w) => new(x, y, z, w);
+    public static Vector2 V2(Vector3 v3) => new(v3.X, v3.Y);
+    public static Vector3 V3(Vector4 v4) => new(v4.X, v4.Y, v4.Z);
 
     //
     public static void Transform(IList<Vector3> positions, Matrix4x4 m) {

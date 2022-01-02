@@ -49,7 +49,7 @@ class TwisterEffect : EffectBase
         }
 
         // Model.
-        this.model = new(positions, faces.ToArray(), Color.White);
+        this.model = new(positions.ToList(), faces, Color.White);
     }
     private static float Spin(int seed, float t, float dy) {
         var random = new Random(seed);
@@ -71,8 +71,8 @@ class TwisterEffect : EffectBase
         //    viewMatrix *
         //    projectionMatrix;
         //Transform(positions, m);
-        var positions = new Vector3[model.Positions.Length];
-        for (int i = 0; i < model.Positions.Length; i++) {
+        var positions = model.Positions.ToList();
+        for (int i = 0; i < model.Positions.Count; i++) {
             var p = model.Positions[i];
             var dy = (float)(i / 4) / (segmentCount - 1);
             var a = Spin(0, t, dy);

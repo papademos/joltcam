@@ -1,6 +1,9 @@
 ﻿using System.Numerics;
 namespace Jolt.NzxtCam;
 
+/// <summary>
+/// This class was a failed experiement and needs to be tossed or rewritten. LUL
+/// </summary>
 class LineManager
 {
     private Dictionary<int, HashSet<int>> xIndex = new();

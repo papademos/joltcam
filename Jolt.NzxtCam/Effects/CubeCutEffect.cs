@@ -5,7 +5,7 @@ namespace Jolt.NzxtCam;
 
 class CubeCutEffect : EffectBase {
     private readonly Model modelA = default(Model) with {
-        Positions = new Vector3[] {
+        Positions = new() {
             V(-50, -50, - -50),
             V( 50, -50, - -50),
             V( 50,  50, - -50),
@@ -15,7 +15,7 @@ class CubeCutEffect : EffectBase {
             V( 50,  50, -  50),
             V(-50,  50, -  50),
         },
-        Faces = new Face[] {
+        Faces = new() {
             new(0, 1, 2, 3), // front
             new(1, 5, 6, 2), // right
             new(5, 4, 7, 6), // back
@@ -28,8 +28,8 @@ class CubeCutEffect : EffectBase {
 
     public CubeCutEffect() {
         modelB = modelA with {
-            Positions = modelA.Positions.ToArray(),
-            Faces = modelA.Faces.ToArray()
+            Positions = modelA.Positions.ToList(),
+            Faces = modelA.Faces.ToList()
         };
     }
     public override void Render(RenderContext context) {
@@ -107,7 +107,7 @@ class CubeCutEffect : EffectBase {
 
         // Render
         var lineManager = new LineManager();
-        ModelRenderer.RenderFaceLines(context, lineManager, new(positionsA.ToArray(), facesA.ToArray(), Color.FromArgb(128, Color.DeepSkyBlue)));
-        ModelRenderer.RenderFaceLines(context, lineManager, new(positionsB.ToArray(), facesB.ToArray(), Color.FromArgb(128, Color.Orange)));
+        ModelRenderer.RenderFaceLines(context, lineManager, new(positionsA, facesA, Color.FromArgb(128, Color.DeepSkyBlue)));
+        ModelRenderer.RenderFaceLines(context, lineManager, new(positionsB, facesB, Color.FromArgb(128, Color.Orange)));
     }
 }

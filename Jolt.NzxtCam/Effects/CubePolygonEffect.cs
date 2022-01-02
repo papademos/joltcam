@@ -7,7 +7,7 @@ namespace Jolt.NzxtCam;
 class CubePolygonEffect : EffectBase
 {
     private readonly Model4 model = default(Model4) with {
-        Positions = new [] {
+        Positions = new() {
             V(-50, -50, - -50, 1),
             V( 50, -50, - -50, 1),
             V( 50,  50, - -50, 1),
@@ -17,7 +17,7 @@ class CubePolygonEffect : EffectBase
             V( 50,  50, -  50, 1),
             V(-50,  50, -  50, 1),
         },
-        Faces = new Face[] {
+        Faces = new() {
             new(0, 1, 2, 3), // front
             new(1, 5, 6, 2), // right
             new(5, 4, 7, 6), // back
@@ -55,12 +55,8 @@ class CubePolygonEffect : EffectBase
 
         //
         var models = new[] {
-            model with {
-                Positions = model.Positions.ToArray()
-            },
-            model with {
-                Positions = model.Positions.ToArray()
-            }
+            model with { Positions = new(model.Positions) },
+            model with { Positions = new(model.Positions) }
         };
 
         // Transformations.
