@@ -1,4 +1,5 @@
-﻿using static Jolt.NzxtCam.MathF;
+﻿using System.Collections.Concurrent;
+using static Jolt.NzxtCam.MathF;
 namespace Jolt.NzxtCam;
 
 public delegate void RenderAction(RenderContext context);
@@ -14,6 +15,8 @@ class GifRenderer {
     private readonly object frameLock = new();
     private ManualResetEvent doneWaitHandle = new(false);
     private int remainingFrameCount = 0;
+    private ConcurrentStack<CBuffer> cbuffers = new();
+    private ConcurrentStack<ZBuffer> zbuffers = new();
 
     public GifRenderer(int width, int height, GifEncoder encoder, RenderAction render) {
         this.width = width;
@@ -35,26 +38,45 @@ class GifRenderer {
     }
 
     private void Render(object? args) {
-        var (t, dt, writeIndex) = (RenderState)args!;
-        var bitmap = new Bitmap(width, height); // TODO: Perhaps specify pixelformat?
-        using var graphics = Graphics.FromImage(bitmap);
-        render(new(graphics, bitmap.Size, t));
-        lock (frameLock) {
-            while (frames.Count <= writeIndex) {
-                frames.Add(null);
-            }
-            frames[writeIndex] = bitmap;
-            while (readIndex < frames.Count && frames[readIndex] != null) {
-                var frame = frames[readIndex];
-                if (frame == null) {
-                    throw new NullReferenceException();
+        // Get/create buffers.
+        if (!cbuffers.TryPop(out var cbuffer)) {
+            cbuffer = new(new(width, height));
+        }
+        if (!zbuffers.TryPop(out var zbuffer)) {
+            zbuffer = new(new(width, height));
+        }
+
+        try {
+            var (t, dt, writeIndex) = (RenderState)args!;
+             // TODO: Perhaps specify pixelformat?
+             // TODO: Remove the need for this bitmap, use the cbuffer bitmap instead.
+            var bitmap = new Bitmap(width, height);
+            using var graphics = Graphics.FromImage(bitmap);
+            render(new(graphics, bitmap.Size, t, cbuffer, zbuffer));
+
+            lock (frameLock) {
+                while (frames.Count <= writeIndex) {
+                    frames.Add(null);
                 }
-                frames[readIndex++] = null;
-                encoder.AddFrame(frame, 0, 0, TimeSpan.FromSeconds(dt));
-                if (Interlocked.Decrement(ref remainingFrameCount) == 0) {
-                    doneWaitHandle.Set();
+                frames[writeIndex] = bitmap;
+                while (readIndex < frames.Count && frames[readIndex] != null) {
+                    var frame = frames[readIndex];
+                    if (frame == null) {
+                        throw new NullReferenceException();
+                    }
+                    frames[readIndex++] = null;
+                    encoder.AddFrame(frame, 0, 0, TimeSpan.FromSeconds(dt));
+                    if (Interlocked.Decrement(ref remainingFrameCount) == 0) {
+                        doneWaitHandle.Set();
+                    }
                 }
             }
+
+        }
+        finally {
+            // Release buffers
+            cbuffers.Push(cbuffer);
+            zbuffers.Push(zbuffer);
         }
     }
 }

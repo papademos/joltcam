@@ -133,7 +133,6 @@ public unsafe class CBuffer : Buffer<int> {
         }
         return bitmap;
     }
-
 }
 
 public static class TriangleRenderer

@@ -2,6 +2,8 @@
 
 class RenderControl : Control {
     private readonly RenderViewModel viewModel;
+    private CBuffer? cbuffer;
+    private ZBuffer? zbuffer;
 
     public RenderControl(RenderViewModel viewModel) {
         this.viewModel = viewModel;
@@ -20,7 +22,7 @@ class RenderControl : Control {
         //var t = 8.721934f;
         //var t = 13.9439611f;
         //var t = 0.15f;
-        var context = new RenderContext(g, new(w, h), t);
+        var context = new RenderContext(g, new(w, h), t, cbuffer, zbuffer);
         viewModel.Render(context);
     }
 
@@ -44,5 +46,15 @@ class RenderControl : Control {
 
     private void UpdateDimensions() {
         Size = viewModel.Size * viewModel.ScaleFactor;
+        if (cbuffer?.Size != Size) {
+            cbuffer?.Dispose();
+            cbuffer = null;
+        }
+        if (zbuffer?.Size != Size) {
+            zbuffer?.Dispose();
+            zbuffer = null;
+        }
+        cbuffer ??= new(new(Size.Width, Size.Height));
+        zbuffer ??= new(new(Size.Width, Size.Height));
     }
 }

@@ -28,13 +28,12 @@ class CubePolygonEffect : EffectBase
         Color = Color.RebeccaPurple,
     };
 
-    private readonly CBuffer cbuffer = new(new(250, 250));
-    private readonly ZBuffer zbuffer = new(new(250, 250));
-
     public override void Render(RenderContext context) {
         //
-        cbuffer.Clear();
-        zbuffer.Fill(float.MaxValue);
+        var cbuffer = context.Cbuffer;
+        var zbuffer = context.Zbuffer;
+        cbuffer?.Clear();
+        zbuffer?.Fill(float.MaxValue);
 
         // Update
         var (graphics, size, t) = context;
