@@ -21,4 +21,6 @@ record struct int2(int X, int Y)
             }
         }
     }
+
+    public override string ToString() => "{}";
 }

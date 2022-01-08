@@ -8,6 +8,7 @@ class RenderForm : Form {
         this.viewModel = viewModel;
         BackColor = Color.Black;
         KeyPreview = true;
+        //TopMost = true;
         Controls.Add(this.renderControl = renderControl);
         renderControl.SizeChanged += (sender, args) => UpdateDimensions();
         UpdateDimensions();

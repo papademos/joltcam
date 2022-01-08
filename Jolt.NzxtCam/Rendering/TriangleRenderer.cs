@@ -23,26 +23,30 @@ public static class TriangleRenderer
         if (i0 == 1) (p0, p1, p2) = (p1, p2, p0);
         else if (i0 == 2) (p0, p1, p2) = (p2, p0, p1);
 
-        // TODO: Perhaps clip?
+        // TODO: clip?
 
         // Guard clauses.
         var (w, h) = (cbuffer.Size.Width, cbuffer.Size.Height);
         var (y0, y1, y2) = (I(p0.Y), I(p1.Y), I(p2.Y));
         // Top.
         if (y0 < 0) {
-            throw new ArgumentOutOfRangeException();
+            // Fail silent for now
+            return;
         }
         // Bottom.
         if (y1 > h || y2 > h) {
-            throw new ArgumentOutOfRangeException();
+            // Fail silent for now
+            return;
         }
         // Left.
         if (I(p0.X) < 0 | I(p1.X) < 0 || I(p2.X) < 0) {
-            throw new ArgumentOutOfRangeException();
+            // Fail silent for now
+            return;
         }
         // Right.
         if (I(p0.X) > w | I(p1.X) > w || I(p2.X) > w) {
-            throw new ArgumentOutOfRangeException();
+            // Fail silent for now
+            return;
         }
 
         // "split"
@@ -66,6 +70,14 @@ public static class TriangleRenderer
     }
 
     public static void Render(CBuffer cbuffer, ZBuffer? zbuffer, Vector4 upperLeft, Vector4 upperRight, Vector4 lowerLeft, Vector4 lowerRight, int color) {
+        if (upperRight.X < upperLeft.X || lowerRight.X < lowerLeft.X) {
+            return;
+            //// Only needed if we want to support both clockwise and anti-clockwise.
+            //(upperLeft, upperRight) = (upperRight, upperLeft);
+            //(lowerLeft, lowerRight) = (lowerRight, lowerLeft);
+        }
+
+        //
         int I(float f) => (int)(f + 0.5f);
         float F(int i) => (float)i;
         var y0 = I(upperLeft.Y);

@@ -7,7 +7,10 @@ using System.Diagnostics;
 
 namespace Jolt.NzxtCam;
 
-record class Building(Vector2 Position, Vector3 Size, float Rotation);
+record class Building(Vector2 Position, Vector3 Size, float Rotation)
+{
+    public override string ToString() => "{}";
+}
 
 class Block
 {
@@ -106,13 +109,13 @@ class CityEffect : EffectBase
         //
         for (int i = 0; i < models.Count; i++) {
             var model = models[i];
-            var faces = model.Faces.Select(face => face.Select(index => model.Positions[index]).ToArray()).ToArray();
-            foreach (var f in faces) {
+            foreach (var face in model.Faces) {
+                var f = face.Select(index => model.Positions[index]).ToArray();
                 var q = Cross(Vector2.Normalize(V2(f[1] - f[0])), Vector2.Normalize(V2(f[2] - f[1])));
                 if (q < 0) {
                     continue;
                 }
-                var color = model.Color;
+                var color = face.Color;
                 var a = 255;
                 var r = (int)Abs(q * color.R);
                 var g = (int)Abs(q * color.G);
@@ -158,30 +161,4 @@ class CityEffect : EffectBase
             }
         }    
     }
-}
-
-internal static class ModelFactory {
-    public static Model4 CreateCuboid4(float w, float h, float d, Color color)
-        => CreateCuboid4(-w / 2, w / 2, -h / 2, h / 2, -d / 2, d / 2, color);
-
-    public static Model4 CreateCuboid4(float x0, float x1, float y0, float y1, float z0, float z1, Color color)
-        => new(new() {
-            V(x0, y0, z1, 1),
-            V(x1, y0, z1, 1),
-            V(x1, y1, z1, 1),
-            V(x0, y1, z1, 1),
-            V(x0, y0, z0, 1),
-            V(x1, y0, z0, 1),
-            V(x1, y1, z0, 1),
-            V(x0, y1, z0, 1),
-        },
-        new() {
-            new(0, 1, 2, 3), // front
-            new(1, 5, 6, 2), // right
-            new(5, 4, 7, 6), // back
-            new(4, 0, 3, 7), // left
-            new(4, 5, 1, 0), // top
-            new(3, 2, 6, 7), // bottom
-        },
-        color);
 }

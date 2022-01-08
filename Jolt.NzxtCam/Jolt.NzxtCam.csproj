@@ -9,4 +9,8 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Misc\" />
+  </ItemGroup>
+
 </Project>

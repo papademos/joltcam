@@ -4,160 +4,156 @@ namespace Jolt.NzxtCam;
 
 internal static class FaceHelper
 {
-    public static (List<Face> Neg, List<Face> Pos) Split(List<Vector3> p, IReadOnlyList<Face> faces, Plane plane) {
-        var posFaces = new List<Face>();
-        var negFaces = new List<Face>();
-        var pos = new List<int>(8);
-        var neg = new List<int>(8);
-        foreach (var face in faces) {
-            // Get first sign.
-            var sign = 0;
-            for (int i = 0; sign == 0 && i <= face.Count; i++) {
-                sign = Sign(Vector3.Dot(p[face[i]], plane.Normal) + plane.D);
-            }
-            if (sign == 0) {
-                sign = 1;
-            }
+    public static (Face? Neg, Face? Zero, Face? Pos) Split(List<Vector4> modelPositions, Face face, Plane plane) {
+        var c = face.Count;
+        var facePositions = face.Select(i => V3(modelPositions[i])).ToArray();
+        static int S(float f) => Abs(f) < 1e-3 ? 0 : Sign(f);
+        float D(int i) => Distance(facePositions[i], plane);
+        var distances = Enumerable.Range(0, face.Count).Select(D).ToArray();
 
-            //
-            for (int i = 0; i < face.Count; i++) {
-                var i0 = face[i];
-                var i2 = face[i + 1];
-                if (sign == 0) {
+        //
+        var lastSign = 0;
+        var last = c;
+        while (--last >= 0 && (lastSign = S(D(last))) == 0) ;
+        if (last < 0) {
+            return (null, face, null);
+        }
+
+        //
+        var i3 = last;
+        while (--i3 >= 0 && S(D(i3)) != -lastSign) ;
+        if (i3 < 0) {
+            return lastSign < 0
+                ? (null, null, face)
+                : (face, null, null);
+        }
+
+        //
+        var i0 = i3;
+        while (--i0 >= 0 && S(D(i0)) != lastSign) ;
+        if (i0 < 0) {
+            i0 = last;
+        }
+
+        // First split: Turning i0-i2 into i0-i1-i2.
+        var i2 = (i0 + 1) % c;
+        var line0 = new Line3(facePositions[i0], facePositions[i2]);
+        if (!Intersects(line0, plane, out var p1)) {
+            // We usually get here when something is to small to be intersected.
+            var distanceSum = face.Sum(i => Distance(V3(modelPositions[i]), plane));
+            return 
+                IsZero(distanceSum) ? (null, face, null) : 
+                distanceSum < 0 ? (face, null, null) : 
+                (null, null, face);
+        }
+
+        // Second split: Turning i3-i5 into i3-i4-i5.
+        var i5 = i3 + 1; // i3 < i6 < c.
+        var line1 = new Line3(facePositions[i3], facePositions[i5]);
+        if (!Intersects(line1, plane, out var p4)) {
+            // We usually get here when something is to small to be intersected.
+            var distanceSum = face.Sum(i => Distance(V3(modelPositions[i]), plane));
+            return 
+                IsZero(distanceSum) ? (null, face, null) : 
+                distanceSum < 0 ? (face, null, null) : 
+                (null, null, face);
+        }
+
+        // Add the split points to the position buffer.
+        int pi1;
+        if (IsEqual(facePositions[i0], p1)) {
+            pi1 = face[i0];
+        } else if (IsEqual(facePositions[i2], p1)) {
+            pi1 = face[i2];
+        } else {
+            pi1 = modelPositions.Count;
+            modelPositions.Add(V4(p1, 1));
+        }
+
+        int pi4;
+        if (IsEqual(facePositions[i3], p4)) {
+            pi4 = face[i3];
+        } else if (IsEqual(facePositions[i5], p4)) {
+            pi4 = face[i5];
+        } else {
+            pi4 = modelPositions.Count;
+            modelPositions.Add(V4(p4, 1));
+        }
+
+        //
+        static Face CreateFace(Face face, int pi0, int fi0, int fi1, int pi1) {
+            var indices = new List<int>();
+            int fi = fi0;
+            if (pi0 != face[fi0]) {
+                indices.Add(pi0);
+            }
+            for (; fi != fi1; fi = ++fi % face.Count) {
+                indices.Add(face[fi]);
+            }
+            indices.Add(face[fi]);
+            if (pi1 != face[fi]) {
+                indices.Add(pi1);
+            }
+            return face with { Indices = indices };
+        }
+
+        var face0 = CreateFace(face, pi1, i2, i3, pi4);
+        var face1 = CreateFace(face, pi4, i5, i0, pi1);
+
+        // Sanity checks.
+        for (int i = 0; i < face0.Count; i++) {
+            for (int j = i + 1; j < face0.Count; j++) {
+                if (IsEqual(V3(modelPositions[face0[i]]), V3(modelPositions[face0[j]]))) {
                     throw new InvalidOperationException();
                 }
-                var nextSign = Sign(Vector3.Dot(p[i2], plane.Normal) + plane.D);
-                (sign < 0 ? neg : pos).Add(i0);
-                if (nextSign == sign) {                    
-                }
-                else if (nextSign == 0) {
-                    nextSign = sign;
-                    //throw new NotImplementedException();
-                }
-                else {
-                    var line = new Line3(p[i0], p[i2]);
-                    var ray = line.ToRay();
-                    var p1 = Intersection(ray, plane);
-                    var i1 = p.Count;
-                    p.Add(p1);
-                    neg.Add(i1);
-                    pos.Add(i1);
-                }
-                sign = nextSign;
-            }
-
-            //
-            if (pos.Count > 0) {
-                if (pos.Count >= 3) { // TODO :Fix this hack
-                    posFaces.Add(new Face(pos.ToArray()));
-                }
-                pos.Clear();
-            }
-            if (neg.Count > 0) {
-                if (neg.Count >= 3) { // TODO :Fix this hack
-                    negFaces.Add(new Face(neg.ToArray()));
-                }
-                neg.Clear();
             }
         }
-        return (posFaces, negFaces);
-
-        //    var previous = pending;
-        //    for (int i = 0; i <= face.Count; i++) {
-        //        var i2 = face[i];
-        //        var p2 = positions[i2];
-
-        //        // Point is on the plane, so let's choose the same side as the previous point.
-        //        var pp = ClosestPoint(p2, plane);
-        //        var pv = p2 - pp;
-        //        //var distance = Distance(p2, plane);
-        //        if (pv.Length().IsZero()) {
-        //            previous.Add(i2);
-        //            continue;
-        //        }
-
-        //        // Since we have pending points, the current point and the previous point are implicitly on the same side of the plane.
-
-        //        //var current = (distance < 0) ? back : front;
-        //        var current = Vector3.Dot(plane.Normal, pv) < 0 ? back : front;
-        //        if (pending.Count > 0) {
-        //            current.AddRange(pending);
-        //            current.Add(i2);
-        //            pending.Clear();
-        //            previous = current;
-        //            continue;
-        //        }
-
-        //        //
-        //        if (previous == pending) {
-        //            previous = current;
-        //        }
-
-        //        // The current point and the previous point are on the same side of the plane.
-        //        if (current == previous) {
-        //            current.Add(i2);
-        //            continue;
-        //        }
-
-        //        // Intersection detected.
-        //        var i0 = previous.Last();
-        //        var p0 = positions[i0];
-        //        var i1 = positions.Count;
-        //        var p1 = Intersection(new Line3(p0, p2).ToRay(), plane);
-        //        positions.Add(p1);
-        //        previous.Add(i1);
-        //        current.Add(i1);
-        //        current.Add(i2);
-        //        previous = current;
-        //    }
-
-        //    //
-        //    previous.RemoveAt(previous.Count - 1);
-
-        //    //
-        //    if (pending.Count > 0) {
-        //        if (front.Count > 0 || back.Count > 0) {
-        //            throw new InvalidOperationException();
-        //        }
-        //        (front, pending) = (pending, front);
-        //    }
-        //    if (front.Count > 0) {
-        //        frontFaces.Add(new Face(front.ToArray()));
-        //        front.Clear();
-        //    }
-        //    if (back.Count > 0) {
-        //        backFaces.Add(new Face(back.ToArray()));
-        //        back.Clear();
-        //    }
-        //}
-        //return (frontFaces, backFaces);
-    }
-
-    public static Vector3 Intersection(in Ray3 ray, in Plane plane)
-        => ray.Position + ray.Direction * Distance(ray, plane).AssertFinite();
-
-    public static float Distance(in Ray3 ray, in Plane plane) {
-        var direction = Vector3.Dot(plane.Normal, ray.Direction);
-        if (direction == 0) {
-        //if (direction.IsZero()) {
-            return float.PositiveInfinity;
+        for (int i = 0; i < face1.Count; i++) {
+            for (int j = i + 1; j < face1.Count; j++) {
+                if (IsEqual(V3(modelPositions[face1[i]]), V3(modelPositions[face1[j]]))) {
+                    throw new InvalidOperationException();
+                }
+            }
         }
 
-        var from = Vector3.Dot(plane.Normal, ray.Position);
-        var distance = (-plane.D - from) / direction;
-        //if (distance.IsZero()) {
-        //    distance = 0;
-        //}
-        return distance;
+        //
+        return lastSign < 0
+            ? (face0, null, face1)
+            : (face1, null, face0);
     }
 
-    public static Vector3 ClosestPoint(Vector3 point, Plane plane) {
-        var dot = Vector3.Dot(plane.Normal, point);
-        float t = dot - plane.D;
-        return point - (t * plane.Normal);
+    public static bool Intersects(in Line3 line, in Plane plane, out Vector3 position) {
+        var (d0, d1) = (Distance(line[0], plane), Distance(line[1], plane));
+        if (Sign(d0) == Sign(d1)) {
+            position = default;
+            return false;
+        }
+
+        var direction = Plane.DotNormal(plane, line.Direction);
+        var korv = Plane.DotNormal(plane, line[0]);
+        var distance = (-plane.D - korv) / direction;
+        var t = Saturate(distance / line.Length);
+        position = Vector3.Lerp(line[0], line[1], t);
+        return true;
+    }
+
+    public static bool Intersects(in Ray3 ray, in Plane plane, out float distance) {
+        var direction = Plane.DotNormal(plane, ray.Direction);
+        if (direction == Zero) {
+            distance = 0f;
+            return false;
+        }
+
+        var position = Plane.DotNormal(plane, ray.Position);
+        distance = (-plane.D - position) / direction;
+        if (distance < 0f) {
+            distance = 0f;
+            return false;
+        }
+
+        return true;
     }
 
     public static float Distance(Vector3 point, Plane plane)
-        //=> Vector3.Dot(plane.Normal, point) - plane.D;
-        => (ClosestPoint(point, plane) - point).Length();
+        => Plane.DotCoordinate(plane, point);
 }

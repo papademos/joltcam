@@ -27,6 +27,19 @@ public record struct Triangle4(Vector4 P0, Vector4 P1, Vector4 P2)
     public int MaxIY => (int)(MaxY + 0.5f);
     public RectangleF Bounds => RectangleF.FromLTRB(MinX, MinY, MaxX, MaxY);
     public Rectangle BoundsI => Rectangle.FromLTRB(MinIX, MinIY, MaxIX, MaxIY);
+    public override string ToString() => "{}";
+}
+
+public class Polygon4 : List<Vector4>
+{ 
+    public Polygon4(IEnumerable<Vector4> positions) : base(positions) {
+    }
+}
+
+public class Polygon3 : List<Vector3>
+{ 
+    public Polygon3(IEnumerable<Vector3> positions) : base(positions) {
+    }
 }
 
 public class Polygon2 : IList<Vector2>

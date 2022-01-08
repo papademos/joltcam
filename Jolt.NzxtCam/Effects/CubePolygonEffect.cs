@@ -6,27 +6,7 @@ namespace Jolt.NzxtCam;
 
 class CubePolygonEffect : EffectBase
 {
-    private readonly Model4 model = default(Model4) with {
-        Positions = new() {
-            V(-50, -50, - -50, 1),
-            V( 50, -50, - -50, 1),
-            V( 50,  50, - -50, 1),
-            V(-50,  50, - -50, 1),
-            V(-50, -50, -  50, 1),
-            V( 50, -50, -  50, 1),
-            V( 50,  50, -  50, 1),
-            V(-50,  50, -  50, 1),
-        },
-        Faces = new() {
-            new(0, 1, 2, 3), // front
-            new(1, 5, 6, 2), // right
-            new(5, 4, 7, 6), // back
-            new(4, 0, 3, 7), // left
-            new(4, 5, 1, 0), // top
-            new(3, 2, 6, 7), // bottom
-        },
-        Color = Color.RebeccaPurple,
-    };
+    private readonly Model4 model = ModelFactory.CreateCuboid4(100, 100, 100, Color.RebeccaPurple);
 
     public override void Render(RenderContext context) {
         //

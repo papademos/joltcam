@@ -3,7 +3,10 @@ using static Jolt.NzxtCam.MathF;
 namespace Jolt.NzxtCam;
 
 public delegate void RenderAction(RenderContext context);
-record RenderState(float T, float dt, int Frame);
+record RenderState(float T, float dt, int Frame)
+{
+    public override string ToString() => "{}";
+}
 
 class GifRenderer {
     private readonly int width;
